@@ -93,7 +93,7 @@ real-time-data-lake-platform/
 ├── architecture/
 │   └── system_design.png
 │
-└── README.md
+└── results_pictures
 ```
 
 ---
