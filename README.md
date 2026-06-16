@@ -83,10 +83,6 @@ real-time-data-lake-platform/
 │   ├── file_tailing.conf
 │   └── kafka_hdfs.conf
 │
-├── kafka/
-│   ├── create_topic.sh
-│   └── consumer_test.sh
-│
 ├── spark/
 │   └── spark_weather.py
 │
