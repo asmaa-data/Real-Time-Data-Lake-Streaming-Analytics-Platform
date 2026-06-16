@@ -86,9 +86,6 @@ real-time-data-lake-platform/
 ├── spark/
 │   └── spark_weather.py
 │
-├── grafana/
-│   ├── dashboard_queries.md
-│   └── setup_instructions.md
 │
 ├── architecture/
 │   └── system_design.png
