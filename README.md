@@ -77,7 +77,7 @@ Flume → HDFS        Spark Streaming Engine
 real-time-data-lake-platform/
 │
 ├── producer/
-│   ├── weather_api_producer.py
+│   ├── weather_producer.py
 │
 ├── flume/
 │   ├── file_tailing.conf
