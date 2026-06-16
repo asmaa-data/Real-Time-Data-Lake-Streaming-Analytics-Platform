@@ -1,0 +1,119 @@
+#core commands
+
+#start hadoop
+start-dfs.sh
+start-yarn.sh
+
+#run the scrapper
+~/anaconda3/bin/python weather_producer.py
+
+#run zookeper
+cd $KAFKA_HOME
+bin/zookeeper-server-start.sh config/zookeeper.properties 
+
+#run docker 1
+cd $KAFKA_HOME
+bin/kafka-server-start.sh config/server.properties
+
+#run docker 2
+cd $KAFKA_HOME
+bin/kafka-server-start.sh config/server-2.properties
+
+#run a kafka topic 
+cd $KAFKA_HOME
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 2 --partitions 4 --topic myweather
+
+#verify topic creation and docker health 
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+bin/kafka-topics.sh --list --bootstrap-server localhost:9093
+
+#run flume (connect log file with kafka)
+$FLUME_HOME/bin/flume-ng agent \
+--conf $FLUME_HOME/conf \
+--conf-file /home/bigdata/apache-flume-1.7.0-bin/conf/file_tailing.conf \
+--name agent1 \
+-Dflume.root.logger=INFO,console
+
+#run flume (connect kafka with hdfs)
+$FLUME_HOME/bin/flume-ng agent \
+--conf $FLUME_HOME/conf \
+--conf-file /home/bigdata/apache-flume-1.7.0-bin/conf/kafka_hdfs.conf \
+--name agent2 \
+-Dflume.root.logger=INFO,console
+
+#see results on hdfs 
+hdfs dfs -ls /weather/data
+
+===================================================================
+
+#influxdb
+sudo rpm -ivh influxdb-1.8.10.x86_64.rpm
+
+#influxdb start
+sudo service influxdb start
+
+#opening influxdb shell
+influx
+
+#creating a database
+CREATE DATABASE weatherdb;
+SHOW DATABASES;
+
+#install python deps
+pip install pyspark influxdb
+
+#grafana setup
+sudo rpm -ivh grafana-8.3.3-1.x86_64.rpm
+
+#permition
+sudo chmod -R 755 /usr/share/grafana
+
+#restart grafana
+sudo service grafana-server restart
+
+#start spark
+spark-submit \
+--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2 \
+spark_weather.py
+
+#run the scrapper
+~/anaconda3/bin/python weather_producer.py
+
+#on host machine open 
+http://192.168.226.131:3000
+user :admin
+password:admin
+
+#verify spark read kafka 
+edit spark_weather.py to make it output in the consule data in docker topic 
+
+query = parsed.writeStream \
+    .format("console") \
+    .outputMode("append") \
+    .start()
+	
+run 
+spark-submit \
+--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2 \
+spark_weather.py
+
+# Verify InfluxDB Receives Data
+influx
+SHOW DATABASES;
+USE weatherdb;
+SHOW MEASUREMENTS;
+SELECT * FROM weather LIMIT 10;
+SELECT COUNT(temperature) FROM weather;
+
+#verify gravana connection 
+Add Data Source
+Type: InfluxDB
+URL: http://192.168.226.131:8086
+Database: weatherdb
+
+dashboard ==> panal ==> query 
+SELECT mean("temperature")
+FROM weather
+WHERE $timeFilter
+GROUP BY time(1m)
+
